@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            flex-direction: column;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 16px;
+            gap: 2rem;
+            flex-shrink: 0;
+        }
+        .card {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: calc(50% - 16px);
+            margin-bottom: 16px;
+        }
+        .card h2 {
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .product-list {
+            width: 100%;
+        }
+        .product-item {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .buttons button {
+            width: 48%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h2>Create Product</h2>
+        <form id="productForm">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <input type="text" id="description" required>
+            </div>
+            <div class="form-group">
+                <label for="price">Price</label>
+                <input type="number" id="price" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="availableToSell">Available to Sell</label>
+                <select id="availableToSell" required>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                </select>
+            </div>
+            <button type="submit">Create Product</button>
+        </form>
+    </div>
+    <div class="card product-list">
+        <h2>Product List</h2>
+        <div class="buttons">
+            <button id="listProducts">List Products</button>
+            <button id="listSortedProducts">List Sorted Products</button>
+        </div>
+        <div id="products"></div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('productForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const name = document.getElementById('name').value;
+        const description = document.getElementById('description').value;
+        const price = document.getElementById('price').value;
+        const availableToSell = document.getElementById('availableToSell').value;
+
+        const product = {
+            name: name,
+            description: description,
+            price: price,
+            availableToSell: availableToSell
+        };
+
+        try {
+            await fetch('http://localhost:8080/product', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(product)
+            });
+
+            document.getElementById('productForm').reset();
+            listProducts();
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+
+    async function listProducts() {
+        try {
+            const response = await fetch('http://localhost:8080/product');
+            const products = await response.json();
+
+            const productsDiv = document.getElementById('products');
+            productsDiv.innerHTML = '';
+            products.forEach(product => {
+                const productItem = document.createElement('div');
+                productItem.className = 'product-item';
+                productItem.innerHTML = `<strong>Name:</strong> ${product.name}<br>
+                                         <strong>Price:</strong> $${product.price || 'N/A'}<br>
+                                         ${product.availableToSell === 'yes' ? 'Available to Sell' : 'Not Available to Sell'}`;
+                productsDiv.appendChild(productItem);
+            });
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    async function listSortedProducts() {
+        try {
+            const response = await fetch('http://localhost:8080/product/sortByPrice');
+            const products = await response.json();
+
+            const productsDiv = document.getElementById('products');
+            productsDiv.innerHTML = '';
+            products.forEach(product => {
+                const productItem = document.createElement('div');
+                productItem.className = 'product-item';
+                productItem.innerHTML = `<strong>Name:</strong> ${product.name}<br>
+                                         <strong>Price:</strong> $${product.price || 'N/A'}<br>
+                                         ${product.availableToSell === 'yes' ? 'Available to Sell' : 'Not Available to Sell'}`;
+                productsDiv.appendChild(productItem);
+            });
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    document.getElementById('listProducts').addEventListener('click', listProducts);
+    document.getElementById('listSortedProducts').addEventListener('click', listSortedProducts);
+    window.onload = listSortedProducts;
+</script>
+</body>
+</html>
